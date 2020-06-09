@@ -1,15 +1,15 @@
 package main
 
-import "fmt"
-import "net/http"
-import "io"
+import (
+	"golang-rest-api/src/api"
+	"net/http"
+
+	"github.com/gorilla/mux"
+)
 
 func main() {
-    fmt.Printf("server running...")
+	router := mux.NewRouter()
+	router.HandleFunc("/todos", api.GetTodos).Methods("GET")
 
-    http.HandleFunc("/", func(res http.ResponseWriter, req *http.Request) {
-        io.WriteString(res, "Hello world from server")
-    })
-
-    http.ListenAndServe(":8080", nil)
+	http.ListenAndServe(":8080", router)
 }
