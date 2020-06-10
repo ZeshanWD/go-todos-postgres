@@ -10,8 +10,8 @@ import (
 )
 
 type Data struct {
-	Success bool
-	Data    []models.Todo
+	Success bool          `json:"success"`
+	Data    []models.Todo `json:"data"`
 }
 
 func CreateTodo(res http.ResponseWriter, req *http.Request) {
