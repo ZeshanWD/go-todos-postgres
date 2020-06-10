@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"golang-rest-api/src/api"
 	"net/http"
 
@@ -8,8 +9,13 @@ import (
 )
 
 func main() {
+	var port string = "8080"
+
 	router := mux.NewRouter()
 	router.HandleFunc("/todos", api.GetTodos).Methods("GET")
+	router.HandleFunc("/todos/{id}", api.GetTodo).Methods("GET")
+	router.HandleFunc("/todos", api.CreateTodo).Methods("POST")
 
-	http.ListenAndServe(":8080", router)
+	fmt.Printf("Server running at port %s", port)
+	http.ListenAndServe(":"+port, router)
 }

@@ -1,56 +1,78 @@
 package api
 
 import (
-	"golang-rest-api/src/database"
+	"encoding/json"
 	"golang-rest-api/src/models"
 	"io"
-	"log"
 	"net/http"
+
+	"github.com/gorilla/mux"
 )
+
+type Data struct {
+	Success bool
+	Data    []models.Todo
+}
 
 func CreateTodo(res http.ResponseWriter, req *http.Request) {
 	io.WriteString(res, "Hello world from server")
 }
 
-func GetTodos(res http.ResponseWriter, req *http.Request) {
-	db := database.GetConnection()
-	rows, err := db.Query("SELECT * FROM todos")
+func GetTodos(w http.ResponseWriter, req *http.Request) {
+	var todos []models.Todo = models.GetAll()
+
+	var data = Data{true, todos}
+
+	json, err := json.Marshal(data)
 	if err != nil {
-		log.Fatal(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
-	defer rows.Close()
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(json)
+}
 
-	var todos []models.Todo
+func UpdateTodo(w http.ResponseWriter, req *http.Request) {
+	io.WriteString(w, "updating todos..")
+}
 
-	for rows.Next() {
-		t := models.Todo{}
-		err := rows.Scan(&t.ID, &t.description)
+func GetTodo(w http.ResponseWriter, req *http.Request) {
+	vars := mux.Vars(req)
+	id := vars["id"]
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+
+	var data Data
+
+	var todo models.Todo
+	var success bool
+	todo, success = models.Get(id)
+	if success != true {
+		data.Success = false
+
+		json, err := json.Marshal(data)
 		if err != nil {
-			log.Fatal(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
-
-		t.description = strNull.String
-
-		append(t, todos)
+		w.Write(json)
+		return
 	}
 
-	err = rows.Err()
+	data.Success = true
+	data.Data = append(data.Data, todo)
+
+	json, err := json.Marshal(data)
 	if err != nil {
-		log.Fatal(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
-
-	return todos
+	w.Write(json)
 }
 
-func UpdateTodo(res http.ResponseWriter, req *http.Request) {
-	io.WriteString(res, "updating todos..")
-}
-
-func GetTodo(res http.ResponseWriter, req *http.Request) {
-	io.WriteString(res, "get todo")
-}
-
-func DeleteTodo(res http.ResponseWriter, req *http.Request) {
-	io.WriteString(res, "delete todo")
+func DeleteTodo(w http.ResponseWriter, req *http.Request) {
+	io.WriteString(w, "delete todo")
 }
