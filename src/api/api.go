@@ -3,7 +3,6 @@ package api
 import (
 	"encoding/json"
 	"golang-rest-api/src/models"
-	"io"
 	"net/http"
 	"strings"
 
@@ -16,6 +15,15 @@ type Data struct {
 	Errors  []string      `json:"errors"`
 }
 
+func isValidDescription(description string) bool {
+	desc := strings.TrimSpace(description)
+	if len(desc) == 0 {
+		return false
+	}
+
+	return true
+}
+
 func CreateTodo(w http.ResponseWriter, req *http.Request) {
 	var bodyTodo models.Todo
 	err := json.NewDecoder(req.Body).Decode(&bodyTodo)
@@ -26,7 +34,7 @@ func CreateTodo(w http.ResponseWriter, req *http.Request) {
 
 	var data Data = Data{Errors: make([]string, 0)}
 	bodyTodo.Description = strings.TrimSpace(bodyTodo.Description)
-	if len(bodyTodo.Description) == 0 {
+	if !isValidDescription(bodyTodo.Description) {
 		data.Success = false
 		data.Errors = append(data.Errors, "invalid description")
 
@@ -39,10 +47,13 @@ func CreateTodo(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	todo := models.Insert(bodyTodo.Description)
+	todo, success := models.Insert(bodyTodo.Description)
+	if success != true {
+		data.Errors = append(data.Errors, "could not create todo")
+	}
 
+	data.Success = success
 	data.Data = append(data.Data, todo)
-	data.Success = true
 
 	json, err := json.Marshal(data)
 	if err != nil {
@@ -71,7 +82,47 @@ func GetTodos(w http.ResponseWriter, req *http.Request) {
 }
 
 func UpdateTodo(w http.ResponseWriter, req *http.Request) {
-	io.WriteString(w, "updating todos..")
+	vars := mux.Vars(req)
+	todo_id := vars["id"]
+
+	var bodyTodo models.Todo
+	err := json.NewDecoder(req.Body).Decode(&bodyTodo)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	var data Data = Data{Errors: make([]string, 0)}
+	bodyTodo.Description = strings.TrimSpace(bodyTodo.Description)
+	if !isValidDescription(bodyTodo.Description) {
+		data.Success = false
+		data.Errors = append(data.Errors, "invalid description")
+
+		json, err := json.Marshal(data)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Write(json)
+		return
+	}
+
+	todo, success := models.Update(todo_id, bodyTodo.Description)
+	if success != true {
+		data.Errors = append(data.Errors, "could not create todo")
+	}
+
+	data.Success = success
+	data.Data = append(data.Data, todo)
+
+	json, err := json.Marshal(data)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Write(json)
+	return
 }
 
 func GetTodo(w http.ResponseWriter, req *http.Request) {
@@ -110,5 +161,27 @@ func GetTodo(w http.ResponseWriter, req *http.Request) {
 }
 
 func DeleteTodo(w http.ResponseWriter, req *http.Request) {
-	io.WriteString(w, "delete todo")
+	vars := mux.Vars(req)
+	id := vars["id"]
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+
+	var data Data = Data{Errors: make([]string, 0)}
+
+	todo, success := models.Delete(id)
+	if success != true {
+		data.Errors = append(data.Errors, "could not delete todo")
+	}
+
+	data.Success = success
+	data.Data = append(data.Data, todo)
+
+	json, err := json.Marshal(data)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Write(json)
 }

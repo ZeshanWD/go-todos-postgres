@@ -10,13 +10,17 @@ type Todo struct {
 	Description string `json:"description"`
 }
 
-func Insert(description string) Todo {
+func Insert(description string) (Todo, bool) {
 	db := database.GetConnection()
 
 	var todo_id int
 	db.QueryRow("INSERT INTO todos(description) VALUES($1) RETURNING id", description).Scan(&todo_id)
 
-	return Todo{todo_id, ""}
+	if todo_id == 0 {
+		return Todo{}, false
+	}
+
+	return Todo{todo_id, ""}, true
 }
 
 func Get(id string) (Todo, bool) {
@@ -33,13 +37,34 @@ func Get(id string) (Todo, bool) {
 	return Todo{ID, description}, true
 }
 
-func Update() {
+func Delete(id string) (Todo, bool) {
+	db := database.GetConnection()
 
+	var todo_id int
+	db.QueryRow("DELETE FROM todos WHERE id = $1 RETURNING id", id).Scan(&todo_id)
+
+	if todo_id == 0 {
+		return Todo{}, false
+	}
+
+	return Todo{todo_id, ""}, true
+}
+
+func Update(id string, description string) (Todo, bool) {
+	db := database.GetConnection()
+
+	var todo_id int
+	db.QueryRow("UPDATE todos SET description = $1 WHERE id = $2 RETURNING id", description, id).Scan(&todo_id)
+	if todo_id == 0 {
+		return Todo{}, false
+	}
+
+	return Todo{todo_id, description}, true
 }
 
 func GetAll() []Todo {
 	db := database.GetConnection()
-	rows, err := db.Query("SELECT * FROM todos")
+	rows, err := db.Query("SELECT * FROM todos ORDER BY id")
 	if err != nil {
 		log.Fatal(err)
 	}
