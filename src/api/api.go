@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"golang-rest-api/src/helpers"
 	"golang-rest-api/src/models"
 	"net/http"
 	"strings"
@@ -15,15 +16,6 @@ type Data struct {
 	Errors  []string      `json:"errors"`
 }
 
-func isValidDescription(description string) bool {
-	desc := strings.TrimSpace(description)
-	if len(desc) == 0 {
-		return false
-	}
-
-	return true
-}
-
 func CreateTodo(w http.ResponseWriter, req *http.Request) {
 	var bodyTodo models.Todo
 	err := json.NewDecoder(req.Body).Decode(&bodyTodo)
@@ -34,7 +26,7 @@ func CreateTodo(w http.ResponseWriter, req *http.Request) {
 
 	var data Data = Data{Errors: make([]string, 0)}
 	bodyTodo.Description = strings.TrimSpace(bodyTodo.Description)
-	if !isValidDescription(bodyTodo.Description) {
+	if !helpers.IsValidDescription(bodyTodo.Description) {
 		data.Success = false
 		data.Errors = append(data.Errors, "invalid description")
 
@@ -94,7 +86,7 @@ func UpdateTodo(w http.ResponseWriter, req *http.Request) {
 
 	var data Data = Data{Errors: make([]string, 0)}
 	bodyTodo.Description = strings.TrimSpace(bodyTodo.Description)
-	if !isValidDescription(bodyTodo.Description) {
+	if !helpers.IsValidDescription(bodyTodo.Description) {
 		data.Success = false
 		data.Errors = append(data.Errors, "invalid description")
 
