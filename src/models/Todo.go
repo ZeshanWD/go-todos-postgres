@@ -10,8 +10,13 @@ type Todo struct {
 	Description string `json:"description"`
 }
 
-func Insert() {
+func Insert(description string) Todo {
+	db := database.GetConnection()
 
+	var todo_id int
+	db.QueryRow("INSERT INTO todos(description) VALUES($1) RETURNING id", description).Scan(&todo_id)
+
+	return Todo{todo_id, ""}
 }
 
 func Get(id string) (Todo, bool) {
