@@ -12,7 +12,6 @@ func main() {
 	var port string = "8080"
 
 	router := mux.NewRouter()
-
 	apiRouter := router.PathPrefix("/api/").Subrouter()
 	apiRouter.HandleFunc("/todos", api.GetTodos).Methods("GET")
 	apiRouter.HandleFunc("/todos", api.CreateTodo).Methods("POST")

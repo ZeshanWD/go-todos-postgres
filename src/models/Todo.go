@@ -42,7 +42,6 @@ func Delete(id string) (Todo, bool) {
 
 	var todo_id int
 	db.QueryRow("DELETE FROM todos WHERE id = $1 RETURNING id", id).Scan(&todo_id)
-
 	if todo_id == 0 {
 		return Todo{}, false
 	}
