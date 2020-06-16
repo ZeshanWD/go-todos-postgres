@@ -90,7 +90,7 @@ func UpdateTodo(w http.ResponseWriter, req *http.Request) {
 
 	todo, success := models.Update(todo_id, bodyTodo.Description)
 	if success != true {
-		data.Errors = append(data.Errors, "could not create todo")
+		data.Errors = append(data.Errors, "could not update todo")
 	}
 
 	data.Success = success
